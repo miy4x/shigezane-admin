@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { rentalSchema } from '@/lib/validations';
@@ -24,13 +24,6 @@ export default function RentalForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null);
-
-  const { data: buildings = [] } = useQuery({
-    queryKey: ['buildings'],
-    queryFn: buildingApi.getAll, // Note: actually undefined if we remove import buildingApi but kept for others if needed
-    enabled: false // Disable direct fetch here as BuildingSelector handles it
-  });
 
   const {
     register,
@@ -73,7 +66,6 @@ export default function RentalForm() {
         Object.entries(data).forEach(([key, value]) => {
           setValue(key as any, value);
         });
-        setSelectedBuilding(data.building_id);
       });
     }
   }, [isEdit, id, setValue]);
@@ -110,12 +102,6 @@ export default function RentalForm() {
     }
   };
 
-  const handleImageUpload = async (file: File, field: string) => {
-    // ダミーURL生成（本番ではBlob Storageへアップロード）
-    const dummyUrl = `https://via.placeholder.com/800x600?text=${encodeURIComponent(file.name)}`;
-    setValue(field as any, dummyUrl);
-    toast.success('画像をアップロードしました');
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -130,18 +116,15 @@ export default function RentalForm() {
         {/* 建物選択 */}
         <Card>
           <CardHeader>
-            <CardTitle>建物情報</CardTitleするか、新規作成してください</CardDescription>
+            <CardTitle>建物情報</CardTitle>
+            <CardDescription>登録済みの建物から選択するか、新規作成してください</CardDescription>
           </CardHeader>
           <CardContent>
             <BuildingSelector
               value={watch('building_id')}
-              onChange={(id) => {
-                setValue('building_id', id);
-                setSelectedBuilding(id);
-              }}
+              onChange={(id) => setValue('building_id', id)}
               error={errors.building_id?.message}
-            /
-            </div>
+            />
           </CardContent>
         </Card>
 

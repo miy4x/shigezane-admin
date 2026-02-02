@@ -15,7 +15,7 @@ export const buildingSchema = z.object({
   address: z.string().min(1, '住所を入力してください'),
   building_age: z.number().min(0, '築年数は0以上で入力してください').max(100),
   structure: z.enum(['木造', '鉄骨', 'RC', 'SRC'], {
-    errorMap: () => ({ message: '構造を選択してください' })
+    message: '構造を選択してください'
   }),
   total_floors: z.number().min(1, '総階数は1以上で入力してください').max(100)
 });
@@ -37,7 +37,7 @@ export const rentalSchema = z.object({
   pets_allowed: z.boolean(),
   musical_instruments_allowed: z.boolean(),
   status: z.enum(['準備中', '募集中', '入居中'], {
-    errorMap: () => ({ message: 'ステータスを選択してください' })
+    message: 'ステータスを選択してください'
   }),
   images: imageSchema.extend({
     floorplan: z.string().url('間取り図は必須です')
@@ -62,7 +62,7 @@ export const weeklySchema = z.object({
   pets_allowed: z.boolean(),
   musical_instruments_allowed: z.boolean(),
   status: z.enum(['準備中', '募集中', '入居中'], {
-    errorMap: () => ({ message: 'ステータスを選択してください' })
+    message: 'ステータスを選択してください'
   }),
   images: imageSchema.extend({
     floorplan: z.string().url('間取り図は必須です')
@@ -81,18 +81,18 @@ export const landSchema = z.object({
   road_contact: z.string().min(1, '接道を入力してください'),
   land_category: z.string().min(1, '地目を入力してください'),
   status: z.enum(['準備中', '募集中', '成約済'], {
-    errorMap: () => ({ message: 'ステータスを選択してください' })
+    message: 'ステータスを選択してください'
   }),
   images: imageSchema.extend({
     survey: z.string().url('測量図は必須です')
   }),
-  land_details: z.record(z.any()).optional()
+  land_details: z.record(z.string(), z.any()).optional()
 });
 
 // 住宅スキーマ
 export const houseSchema = z.object({
   property_type: z.enum(['戸建', '中古マンション'], {
-    errorMap: () => ({ message: '物件タイプを選択してください' })
+    message: '物件タイプを選択してください'
   }),
   address: z.string().min(1, '住所を入力してください'),
   sale_price: z.number().min(0, '販売価格は0以上で入力してください').max(10000000000),
@@ -103,12 +103,12 @@ export const houseSchema = z.object({
   structure: z.string().min(1, '構造を入力してください'),
   floor: z.number().min(1).max(100),
   status: z.enum(['準備中', '募集中', '成約済'], {
-    errorMap: () => ({ message: 'ステータスを選択してください' })
+    message: 'ステータスを選択してください'
   }),
   images: imageSchema.extend({
     floorplan: z.string().url('間取り図は必須です')
   }),
-  house_details: z.record(z.any()).optional()
+  house_details: z.record(z.string(), z.any()).optional()
 });
 
 // 駐車場マスタスキーマ
@@ -119,7 +119,7 @@ export const parkingLotSchema = z.object({
   images: imageSchema.extend({
     layout: z.string().url('区画図は必須です')
   }),
-  lot_features: z.record(z.any()).optional()
+  lot_features: z.record(z.string(), z.any()).optional()
 });
 
 // 駐車スペーススキーマ
@@ -129,6 +129,6 @@ export const parkingSpaceSchema = z.object({
   monthly_fee: z.number().min(0, '月額料金は0以上で入力してください').max(100000),
   vehicle_size: z.string().min(1, '車両サイズを入力してください'),
   status: z.enum(['準備中', '募集中', '契約中'], {
-    errorMap: () => ({ message: 'ステータスを選択してください' })
+    message: 'ステータスを選択してください'
   })
 });

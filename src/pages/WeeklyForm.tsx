@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -24,7 +24,6 @@ export default function WeeklyForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null);
 
   const {
     register,
@@ -66,7 +65,6 @@ export default function WeeklyForm() {
         Object.entries(data).forEach(([key, value]) => {
           setValue(key as any, value);
         });
-        setSelectedBuilding(data.building_id);
       });
     }
   }, [isEdit, id, setValue]);
@@ -121,10 +119,7 @@ export default function WeeklyForm() {
           <CardContent>
             <BuildingSelector
               value={watch('building_id')}
-              onChange={(id) => {
-                setValue('building_id', id);
-                setSelectedBuilding(id);
-              }}
+              onChange={(id) => setValue('building_id', id)}
               error={errors.building_id?.message}
             />
           </CardContent>

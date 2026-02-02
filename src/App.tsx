@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
@@ -12,9 +13,17 @@ import LoginPage from '@/pages/LoginPage';
 import Dashboard from '@/pages/Dashboard';
 import RentalList from '@/pages/RentalList';
 import RentalForm from '@/pages/RentalForm';
+import WeeklyList from '@/pages/WeeklyList';
+import WeeklyForm from '@/pages/WeeklyForm';
+import LandList from '@/pages/LandList';
+import LandForm from '@/pages/LandForm';
+import HouseList from '@/pages/HouseList';
+import HouseForm from '@/pages/HouseForm';
+import ParkingList from '@/pages/ParkingList';
+import ParkingForm from '@/pages/ParkingForm';
 
 // 認証ガードコンポーネント
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
 
@@ -42,11 +51,25 @@ function App() {
             <Route path="rental/new" element={<RentalForm />} />
             <Route path="rental/:id/edit" element={<RentalForm />} />
             
-            {/* 今後実装予定のルート */}
-            <Route path="weekly" element={<div className="p-4">ウィークリー管理（準備中）</div>} />
-            <Route path="land" element={<div className="p-4">土地管理（準備中）</div>} />
-            <Route path="house" element={<div className="p-4">住宅管理（準備中）</div>} />
-            <Route path="parking" element={<div className="p-4">駐車場管理（準備中）</div>} />
+            {/* ウィークリー管理 */}
+            <Route path="weekly" element={<WeeklyList />} />
+            <Route path="weekly/new" element={<WeeklyForm />} />
+            <Route path="weekly/:id/edit" element={<WeeklyForm />} />
+
+            {/* 土地管理 */}
+            <Route path="land" element={<LandList />} />
+            <Route path="land/new" element={<LandForm />} />
+            <Route path="land/:id/edit" element={<LandForm />} />
+
+            {/* 住宅管理 */}
+            <Route path="house" element={<HouseList />} />
+            <Route path="house/new" element={<HouseForm />} />
+            <Route path="house/:id/edit" element={<HouseForm />} />
+
+            {/* 駐車場管理 */}
+            <Route path="parking" element={<ParkingList />} />
+            <Route path="parking/new" element={<ParkingForm />} />
+            <Route path="parking/:id/edit" element={<ParkingForm />} />
           </Route>
         </Routes>
         <Toaster />
