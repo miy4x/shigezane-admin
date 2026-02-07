@@ -17,7 +17,8 @@ import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import { BuildingSelector } from '@/components/property/BuildingSelector';
 import type { RentalUnitInput } from '@/types/property';
-import { Camera, FileDigit, Images } from 'lucide-react';
+import { Camera, FileDigit, Images, ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 type RentalFormData = z.infer<typeof rentalSchema>;
 
@@ -32,6 +33,7 @@ export default function RentalForm() {
     formState: { errors, isSubmitting },
     setValue,
     watch,
+    reset,
   } = useForm<RentalFormData>({
     resolver: zodResolver(rentalSchema),
     defaultValues: {
@@ -61,15 +63,17 @@ export default function RentalForm() {
   const parkingAvailable = watch('parking_available');
 
   // 編集時のデータ取得
+  const { data: property } = useQuery({
+    queryKey: ['rental-unit', id],
+    queryFn: () => rentalApi.getById(Number(id)),
+    enabled: isEdit,
+  });
+
   useEffect(() => {
-    if (isEdit && id) {
-      rentalApi.getById(Number(id)).then((data) => {
-        Object.entries(data).forEach(([key, value]) => {
-          setValue(key as any, value);
-        });
-      });
+    if (property) {
+      reset(property);
     }
-  }, [isEdit, id, setValue]);
+  }, [property, reset]);
 
   const createMutation = useMutation({
     mutationFn: rentalApi.create,
@@ -111,11 +115,16 @@ export default function RentalForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          {isEdit ? '賃貸物件編集' : '賃貸物件登録'}
-        </h2>
-        <p className="text-gray-500 mt-2">物件情報を入力してください</p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/rental')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isEdit ? '賃貸物件編集' : '賃貸物件登録'}
+          </h2>
+          <p className="text-gray-500 mt-2">物件情報を入力してください</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parkingSpaceSchema } from '@/lib/validations';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ParkingLotSelector } from '@/components/property/ParkingLotSelector';
 import type { ParkingSpaceInput } from '@/types/property';
+import { ArrowLeft } from 'lucide-react';
 
 type ParkingFormData = z.infer<typeof parkingSpaceSchema>;
 
@@ -40,15 +41,19 @@ export default function ParkingForm() {
     },
   });
 
+  const { data: property } = useQuery({
+    queryKey: ['parking-space', id],
+    queryFn: () => parkingApi.getById(Number(id)),
+    enabled: isEdit,
+  });
+
   useEffect(() => {
-    if (isEdit && id) {
-      parkingApi.getById(Number(id)).then((data) => {
-        Object.entries(data).forEach(([key, value]) => {
-          setValue(key as any, value);
-        });
+    if (property) {
+      Object.entries(property).forEach(([key, value]) => {
+        setValue(key as any, value);
       });
     }
-  }, [isEdit, id, setValue]);
+  }, [property, setValue]);
 
   const createMutation = useMutation({
     mutationFn: parkingApi.create,
@@ -84,11 +89,16 @@ export default function ParkingForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          {isEdit ? '駐車場区画編集' : '駐車場区画登録'}
-        </h2>
-        <p className="text-gray-500 mt-2">区画の詳細情報を入力してください</p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/parking')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isEdit ? '駐車場区画編集' : '駐車場区画登録'}
+          </h2>
+          <p className="text-gray-500 mt-2">区画の詳細情報を入力してください</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

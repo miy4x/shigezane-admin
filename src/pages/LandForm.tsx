@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { landSchema } from '@/lib/validations';
@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import type { LandPropertyInput as LandInput } from '@/types/property';
-import { Camera, Map as MapIcon, Images } from 'lucide-react';
+import { Camera, Map as MapIcon, Images, ArrowLeft } from 'lucide-react';
 
 type LandFormData = z.infer<typeof landSchema>;
 
@@ -50,15 +50,23 @@ export default function LandForm() {
     },
   });
 
+  const { data: property } = useQuery({
+    queryKey: ['land-property', id],
+    queryFn: () => landApi.getById(Number(id)),
+    enabled: isEdit,
+  });
+
   useEffect(() => {
-    if (isEdit && id) {
-      landApi.getById(Number(id)).then((data) => {
-        Object.entries(data).forEach(([key, value]) => {
-          setValue(key as any, value);
-        });
+    if (property) {
+      const formData = {
+        ...property,
+        images: property.images || { main: '', survey: '', gallery: [] },
+      };
+      Object.entries(formData).forEach(([key, value]) => {
+        setValue(key as any, value);
       });
     }
-  }, [isEdit, id, setValue]);
+  }, [property, setValue]);
 
   const createMutation = useMutation({
     mutationFn: landApi.create,
@@ -99,11 +107,16 @@ export default function LandForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          {isEdit ? '土地情報編集' : '土地情報登録'}
-        </h2>
-        <p className="text-gray-500 mt-2">土地の基本情報を入力してください</p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/land')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isEdit ? '土地情報編集' : '土地情報登録'}
+          </h2>
+          <p className="text-gray-500 mt-2">土地の基本情報を入力してください</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

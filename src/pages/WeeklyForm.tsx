@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { weeklySchema } from '@/lib/validations';
@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import { BuildingSelector } from '@/components/property/BuildingSelector';
 import type { WeeklyUnitInput } from '@/types/property';
-import { Camera, FileDigit, Images } from 'lucide-react';
+import { Camera, FileDigit, Images, ArrowLeft } from 'lucide-react';
 
 type WeeklyFormData = z.infer<typeof weeklySchema>;
 
@@ -60,15 +60,23 @@ export default function WeeklyForm() {
 
   const parkingAvailable = watch('parking_available');
 
+  const { data: property } = useQuery({
+    queryKey: ['weekly-unit', id],
+    queryFn: () => weeklyApi.getById(Number(id)),
+    enabled: isEdit,
+  });
+
   useEffect(() => {
-    if (isEdit && id) {
-      weeklyApi.getById(Number(id)).then((data) => {
-        Object.entries(data).forEach(([key, value]) => {
-          setValue(key as any, value);
-        });
+    if (property) {
+      const formData = {
+        ...property,
+        images: property.images || { main: '', floorplan: '', gallery: [] },
+      };
+      Object.entries(formData).forEach(([key, value]) => {
+        setValue(key as any, value);
       });
     }
-  }, [isEdit, id, setValue]);
+  }, [property, setValue]);
 
   const createMutation = useMutation({
     mutationFn: weeklyApi.create,
@@ -109,11 +117,16 @@ export default function WeeklyForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          {isEdit ? 'ウィークリー物件編集' : 'ウィークリー物件登録'}
-        </h2>
-        <p className="text-gray-500 mt-2">物件情報を入力してください</p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/weekly')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isEdit ? 'ウィークリー物件編集' : 'ウィークリー物件登録'}
+          </h2>
+          <p className="text-gray-500 mt-2">物件情報を入力してください</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
