@@ -364,6 +364,7 @@ export default function RentalForm() {
             </CardHeader>
             <CardContent>
               <MultiImageUploadField
+                name="images.gallery"
                 value={watch('images.gallery') || []}
                 onChange={(urls) => setValue('images.gallery', urls)}
                 maxFiles={10}

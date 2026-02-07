@@ -29,7 +29,7 @@ export function ParkingLotSelector({ value, onChange, error }: ParkingLotSelecto
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: parkingLots = [], isError } = useQuery({
+  const { data: parkingLots = [] } = useQuery({
     queryKey: ['parking-lots'],
     queryFn: parkingLotApi.getAll,
     retry: 1,

@@ -28,7 +28,7 @@ export function BuildingSelector({ value, onChange, error }: BuildingSelectorPro
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: buildings = [], isError } = useQuery({
+  const { data: buildings = [] } = useQuery({
     queryKey: ['buildings'],
     queryFn: buildingApi.getAll,
     retry: 1,

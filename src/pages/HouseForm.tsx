@@ -277,6 +277,7 @@ export default function HouseForm() {
             </CardHeader>
             <CardContent>
               <MultiImageUploadField
+                name="images.gallery"
                 value={watch('images.gallery') || []}
                 onChange={(urls) => setValue('images.gallery', urls)}
                 maxFiles={10}
