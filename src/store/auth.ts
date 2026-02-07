@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, _password: string) => {
     // TODO: 実際の認証処理
     // 仮実装
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // await new Promise((resolve) => setTimeout(resolve, 500));
     set({
       user: {
         id: '1',

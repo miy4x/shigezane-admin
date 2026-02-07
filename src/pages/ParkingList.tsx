@@ -60,7 +60,22 @@ export default function ParkingList() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">読み込み中...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-32 bg-gray-200 rounded"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          </div>
+          <div className="h-10 w-24 bg-gray-200 rounded"></div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -109,63 +124,79 @@ export default function ParkingList() {
 
         <TabsContent value="list">
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>駐車場名</TableHead>
-                  <TableHead>区画番号</TableHead>
-                  <TableHead>月額賃料</TableHead>
-                  <TableHead>車両サイズ</TableHead>
-                  <TableHead>ステータス</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSpaces.map((space) => (
-                  <TableRow key={space.parking_space_id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Car className="h-4 w-4 text-gray-400" />
-                        {space.parking_lot_name}
-                      </div>
-                    </TableCell>
-                    <TableCell>{space.space_number}</TableCell>
-                    <TableCell>¥{space.monthly_fee.toLocaleString()}</TableCell>
-                    <TableCell>{space.vehicle_size}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(space.status)}>
-                        {space.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/parking/${space.parking_space_id}/edit`)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(space.parking_space_id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[150px]">駐車場名</TableHead>
+                    <TableHead className="w-[100px]">区画番号</TableHead>
+                    <TableHead className="w-[120px]">月額賃料</TableHead>
+                    <TableHead className="w-[120px]">車両サイズ</TableHead>
+                    <TableHead className="w-[100px]">ステータス</TableHead>
+                    <TableHead className="text-right w-[100px]">操作</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredSpaces.map((space) => (
+                    <TableRow 
+                      key={space.parking_space_id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/parking/${space.parking_space_id}`)}
+                    >
+                      <TableCell className="font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4 text-gray-400" />
+                          {space.parking_lot_name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{space.space_number}</TableCell>
+                      <TableCell className="whitespace-nowrap">¥{space.monthly_fee.toLocaleString()}</TableCell>
+                      <TableCell className="whitespace-nowrap">{space.vehicle_size}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(space.status)} className="whitespace-nowrap">
+                          {space.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/parking/${space.parking_space_id}/edit`);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(space.parking_space_id);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </TabsContent>
 
         <TabsContent value="card">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSpaces.map((space) => (
-              <Card key={space.parking_space_id}>
+              <Card 
+                key={space.parking_space_id}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/parking/${space.parking_space_id}`)}
+              >
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Car className="h-5 w-5 text-gray-500" />
@@ -195,14 +226,20 @@ export default function ParkingList() {
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => navigate(`/parking/${space.parking_space_id}/edit`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/parking/${space.parking_space_id}/edit`);
+                    }}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     編集
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={() => handleDelete(space.parking_space_id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(space.parking_space_id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

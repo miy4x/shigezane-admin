@@ -29,9 +29,11 @@ export function ParkingLotSelector({ value, onChange, error }: ParkingLotSelecto
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: parkingLots = [] } = useQuery({
+  const { data: parkingLots = [], isError } = useQuery({
     queryKey: ['parking-lots'],
     queryFn: parkingLotApi.getAll,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   const {
@@ -71,6 +73,10 @@ export function ParkingLotSelector({ value, onChange, error }: ParkingLotSelecto
   });
 
   const onSubmitNew = (data: ParkingLotFormData) => {
+    if (data.images?.main?.startsWith('blob:')) {
+      toast.error('画像のアップロードが完了していません');
+      return;
+    }
     createMutation.mutate(data as ParkingLotInput);
   };
 
@@ -150,6 +156,7 @@ export function ParkingLotSelector({ value, onChange, error }: ParkingLotSelecto
                     <Input 
                       id="total_spaces" 
                       type="number" 
+                      autoComplete="off"
                       {...register('total_spaces', { valueAsNumber: true })} 
                     />
                     {newLotErrors.total_spaces && (

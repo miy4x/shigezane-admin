@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import type { LandPropertyInput as LandInput } from '@/types/property';
+import { Camera, Map as MapIcon, Images } from 'lucide-react';
 
 type LandFormData = z.infer<typeof landSchema>;
 
@@ -84,6 +85,11 @@ export default function LandForm() {
   });
 
   const onSubmit = (data: LandFormData) => {
+    if (data.images?.main?.startsWith('blob:')) {
+      toast.error('画像のアップロードが完了していません');
+      return;
+    }
+
     if (isEdit) {
       updateMutation.mutate(data);
     } else {
@@ -115,13 +121,13 @@ export default function LandForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="sale_price">販売価格（円）</Label>
-                <Input id="sale_price" type="number" {...register('sale_price', { valueAsNumber: true })} />
+                <Input id="sale_price" type="number" autoComplete="off" {...register('sale_price', { valueAsNumber: true })} />
                 {errors.sale_price && <p className="text-sm text-red-500">{errors.sale_price.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="land_area">土地面積（㎡）</Label>
-                <Input id="land_area" type="number" step="0.01" {...register('land_area', { valueAsNumber: true })} />
+                <Input id="land_area" type="number" step="0.01" autoComplete="off" {...register('land_area', { valueAsNumber: true })} />
                 {errors.land_area && <p className="text-sm text-red-500">{errors.land_area.message}</p>}
               </div>
             </div>
@@ -159,13 +165,13 @@ export default function LandForm() {
 
                <div className="space-y-2">
                 <Label htmlFor="building_coverage">建ぺい率（%）</Label>
-                <Input id="building_coverage" type="number" {...register('building_coverage', { valueAsNumber: true })} />
+                <Input id="building_coverage" type="number" autoComplete="off" {...register('building_coverage', { valueAsNumber: true })} />
                 {errors.building_coverage && <p className="text-sm text-red-500">{errors.building_coverage.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="floor_area_ratio">容積率（%）</Label>
-                <Input id="floor_area_ratio" type="number" {...register('floor_area_ratio', { valueAsNumber: true })} />
+                <Input id="floor_area_ratio" type="number" autoComplete="off" {...register('floor_area_ratio', { valueAsNumber: true })} />
                 {errors.floor_area_ratio && <p className="text-sm text-red-500">{errors.floor_area_ratio.message}</p>}
               </div>
 
@@ -180,40 +186,52 @@ export default function LandForm() {
 
         {/* 画像アップロード */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>📷 サムネイル（必須）</CardTitle>
-              <CardDescription>一覧で表示される代表画像</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.main"
-                value={watch('images.main')}
-                onChange={(url) => setValue('images.main', url)}
-                required
-              />
-              {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  サムネイル（必須）
+                </CardTitle>
+                <CardDescription>一覧で表示される代表画像</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.main"
+                  value={watch('images.main')}
+                  onChange={(url) => setValue('images.main', url)}
+                  required
+                />
+                {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
+              </CardContent>
+            </Card>
+            
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapIcon className="h-5 w-5" />
+                  測量図・区画図（必須）
+                </CardTitle>
+                <CardDescription>土地の形状や接道状況を示す図面</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.survey"
+                  value={watch('images.survey')}
+                  onChange={(url) => setValue('images.survey', url)}
+                  required
+                />
+                {errors.images?.survey && <p className="text-sm text-red-500">{errors.images.survey.message}</p>}
+              </CardContent>
+            </Card>
+          </div>
           
           <Card>
             <CardHeader>
-              <CardTitle>📐 測量図・区画図（必須）</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.survey"
-                value={watch('images.survey')}
-                onChange={(url) => setValue('images.survey', url)}
-                required
-              />
-              {errors.images?.survey && <p className="text-sm text-red-500">{errors.images.survey.message}</p>}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>🖼️ その他の画像（最大10枚）</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Images className="h-5 w-5" />
+                その他の画像（最大10枚）
+              </CardTitle>
               <CardDescription>現地の様子や周辺環境など</CardDescription>
             </CardHeader>
             <CardContent>

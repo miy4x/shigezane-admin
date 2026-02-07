@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import type { HousePropertyInput as HouseInput } from '@/types/property';
+import { Camera, FileDigit, Images } from 'lucide-react';
 
 type HouseFormData = z.infer<typeof houseSchema>;
 
@@ -87,6 +88,11 @@ export default function HouseForm() {
   });
 
   const onSubmit = (data: HouseFormData) => {
+    if (data.images?.main?.startsWith('blob:')) {
+      toast.error('画像のアップロードが完了していません');
+      return;
+    }
+
     if (isEdit) {
       updateMutation.mutate(data);
     } else {
@@ -138,21 +144,21 @@ export default function HouseForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="sale_price">販売価格（円）</Label>
-                <Input id="sale_price" type="number" {...register('sale_price', { valueAsNumber: true })} />
+                <Input id="sale_price" type="number" autoComplete="off" {...register('sale_price', { valueAsNumber: true })} />
                 {errors.sale_price && <p className="text-sm text-red-500">{errors.sale_price.message}</p>}
               </div>
 
               {propertyType === '戸建' && (
                 <div className="space-y-2">
                   <Label htmlFor="land_area">土地面積（㎡）</Label>
-                  <Input id="land_area" type="number" step="0.01" {...register('land_area', { valueAsNumber: true })} />
+                  <Input id="land_area" type="number" step="0.01" autoComplete="off" {...register('land_area', { valueAsNumber: true })} />
                   {errors.land_area && <p className="text-sm text-red-500">{errors.land_area.message}</p>}
                 </div>
               )}
 
               <div className="space-y-2">
                 <Label htmlFor="building_area">建物面積/専有面積（㎡）</Label>
-                <Input id="building_area" type="number" step="0.01" {...register('building_area', { valueAsNumber: true })} />
+                <Input id="building_area" type="number" step="0.01" autoComplete="off" {...register('building_area', { valueAsNumber: true })} />
                 {errors.building_area && <p className="text-sm text-red-500">{errors.building_area.message}</p>}
               </div>
             </div>
@@ -185,7 +191,7 @@ export default function HouseForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="building_age">築年数（年）</Label>
-                <Input id="building_age" type="number" {...register('building_age', { valueAsNumber: true })} />
+                <Input id="building_age" type="number" autoComplete="off" {...register('building_age', { valueAsNumber: true })} />
                 <p className="text-xs text-gray-400">新築の場合は0を入力</p>
                 {errors.building_age && <p className="text-sm text-red-500">{errors.building_age.message}</p>}
               </div>
@@ -207,7 +213,7 @@ export default function HouseForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="floor">階数</Label>
-                <Input id="floor" type="number" {...register('floor', { valueAsNumber: true })} />
+                <Input id="floor" type="number" autoComplete="off" {...register('floor', { valueAsNumber: true })} />
                 {propertyType === '戸建' ? (
                    <p className="text-xs text-gray-400">建物全体の階数</p>
                 ) : (
@@ -221,40 +227,53 @@ export default function HouseForm() {
 
         {/* 画像アップロード */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>📷 サムネイル（必須）</CardTitle>
-              <CardDescription>一覧で表示される代表画像</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.main"
-                value={watch('images.main')}
-                onChange={(url) => setValue('images.main', url)}
-                required
-              />
-              {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  サムネイル（必須）
+                </CardTitle>
+                <CardDescription>一覧で表示される代表画像</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.main"
+                  value={watch('images.main')}
+                  onChange={(url) => setValue('images.main', url)}
+                  required
+                />
+                {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
+              </CardContent>
+            </Card>
+            
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileDigit className="h-5 w-5" />
+                  間取り図（必須）
+                </CardTitle>
+                <CardDescription>部屋の配置を示す図面</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.floorplan"
+                  value={watch('images.floorplan')}
+                  onChange={(url) => setValue('images.floorplan', url)}
+                  required
+                />
+                {errors.images?.floorplan && <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>}
+              </CardContent>
+            </Card>
+          </div>
           
           <Card>
             <CardHeader>
-              <CardTitle>📐 間取り図（必須）</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.floorplan"
-                value={watch('images.floorplan')}
-                onChange={(url) => setValue('images.floorplan', url)}
-                required
-              />
-              {errors.images?.floorplan && <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>🖼️ その他の画像（最大10枚）</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Images className="h-5 w-5" />
+                その他の画像（最大10枚）
+              </CardTitle>
+              <CardDescription>内観、設備、周辺環境等</CardDescription>
             </CardHeader>
             <CardContent>
               <MultiImageUploadField

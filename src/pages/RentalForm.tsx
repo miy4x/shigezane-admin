@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import { BuildingSelector } from '@/components/property/BuildingSelector';
 import type { RentalUnitInput } from '@/types/property';
+import { Camera, FileDigit, Images } from 'lucide-react';
 
 type RentalFormData = z.infer<typeof rentalSchema>;
 
@@ -95,6 +96,11 @@ export default function RentalForm() {
   });
 
   const onSubmit = (data: RentalFormData) => {
+    if (data.images?.main?.startsWith('blob:')) {
+      toast.error('画像のアップロードが完了していません');
+      return;
+    }
+
     if (isEdit) {
       updateMutation.mutate(data);
     } else {
@@ -137,7 +143,7 @@ export default function RentalForm() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="unit_number">部屋番号</Label>
-                <Input id="unit_number" {...register('unit_number')} />
+                <Input id="unit_number" autoComplete="off" {...register('unit_number')} />
                 {errors.unit_number && (
                   <p className="text-sm text-red-500">{errors.unit_number.message}</p>
                 )}
@@ -148,6 +154,7 @@ export default function RentalForm() {
                 <Input
                   id="floor"
                   type="number"
+                  autoComplete="off"
                   {...register('floor', { valueAsNumber: true })}
                 />
                 {errors.floor && (
@@ -182,6 +189,7 @@ export default function RentalForm() {
                   id="area"
                   type="number"
                   step="0.1"
+                  autoComplete="off"
                   {...register('area', { valueAsNumber: true })}
                 />
                 {errors.area && (
@@ -223,6 +231,7 @@ export default function RentalForm() {
                 <Input
                   id="monthly_rent"
                   type="number"
+                  autoComplete="off"
                   {...register('monthly_rent', { valueAsNumber: true })}
                 />
                 {errors.monthly_rent && (
@@ -235,6 +244,7 @@ export default function RentalForm() {
                 <Input
                   id="management_fee"
                   type="number"
+                  autoComplete="off"
                   {...register('management_fee', { valueAsNumber: true })}
                 />
                 {errors.management_fee && (
@@ -247,6 +257,7 @@ export default function RentalForm() {
                 <Input
                   id="deposit"
                   type="number"
+                  autoComplete="off"
                   {...register('deposit', { valueAsNumber: true })}
                 />
                 {errors.deposit && (
@@ -259,6 +270,7 @@ export default function RentalForm() {
                 <Input
                   id="key_money"
                   type="number"
+                  autoComplete="off"
                   {...register('key_money', { valueAsNumber: true })}
                 />
                 {errors.key_money && (
@@ -282,6 +294,7 @@ export default function RentalForm() {
                   <Input
                     id="parking_fee"
                     type="number"
+                    autoComplete="off"
                     {...register('parking_fee', { valueAsNumber: true })}
                   />
                 </div>
@@ -294,47 +307,59 @@ export default function RentalForm() {
         
         {/* 画像アップロード */}
         <div className="space-y-6">
-          {/* サムネイル（必須） */}
-          <Card>
-            <CardHeader>
-              <CardTitle>📷 サムネイル（必須）</CardTitle>
-              <CardDescription>物件一覧で表示される代表画像</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.main"
-                value={watch('images.main')}
-                onChange={(url) => setValue('images.main', url)}
-                required
-              />
-              {errors.images?.main && (
-                <p className="text-sm text-red-500">{errors.images.main.message}</p>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* 間取り図（必須） */}
-          <Card>
-            <CardHeader>
-              <CardTitle>📐 間取り図（必須）</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.floorplan"
-                value={watch('images.floorplan')}
-                onChange={(url) => setValue('images.floorplan', url)}
-                required
-              />
-              {errors.images?.floorplan && (
-                <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* サムネイル（必須） */}
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  サムネイル（必須）
+                </CardTitle>
+                <CardDescription>物件一覧で表示される代表画像</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.main"
+                  value={watch('images.main')}
+                  onChange={(url) => setValue('images.main', url)}
+                  required
+                />
+                {errors.images?.main && (
+                  <p className="text-sm text-red-500">{errors.images.main.message}</p>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* 間取り図（必須） */}
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileDigit className="h-5 w-5" />
+                  間取り図（必須）
+                </CardTitle>
+                <CardDescription>部屋の配置を示す図面</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.floorplan"
+                  value={watch('images.floorplan')}
+                  onChange={(url) => setValue('images.floorplan', url)}
+                  required
+                />
+                {errors.images?.floorplan && (
+                  <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
           
           {/* その他の画像（任意） */}
           <Card>
             <CardHeader>
-              <CardTitle>🖼️ その他の画像（最大10枚）</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Images className="h-5 w-5" />
+                その他の画像（最大10枚）
+              </CardTitle>
               <CardDescription>内観、設備、周辺環境等</CardDescription>
             </CardHeader>
             <CardContent>

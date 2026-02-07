@@ -120,7 +120,7 @@ export default function ParkingForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="monthly_fee">月額料金（円）</Label>
-                <Input id="monthly_fee" type="number" {...register('monthly_fee', { valueAsNumber: true })} />
+                <Input id="monthly_fee" type="number" autoComplete="off" {...register('monthly_fee', { valueAsNumber: true })} />
                 {errors.monthly_fee && <p className="text-sm text-red-500">{errors.monthly_fee.message}</p>}
               </div>
 

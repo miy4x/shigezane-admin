@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,30 +8,41 @@ import { Building2, CalendarClock, LandPlot, Home, ParkingCircle, ArrowRight } f
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const { data: rentalUnits = [] } = useQuery({
-    queryKey: ['rental-units'],
-    queryFn: rentalApi.getAll,
+  // 並列でデータ取得（パフォーマンス最適化）
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ['rental-units'],
+        queryFn: rentalApi.getAll,
+      },
+      {
+        queryKey: ['weekly-units'],
+        queryFn: weeklyApi.getAll,
+      },
+      {
+        queryKey: ['land-properties'],
+        queryFn: landApi.getAll,
+      },
+      {
+        queryKey: ['house-properties'],
+        queryFn: houseApi.getAll,
+      },
+      {
+        queryKey: ['parking-spaces'],
+        queryFn: parkingApi.getAll,
+      },
+    ],
   });
 
-  const { data: weeklyUnits = [] } = useQuery({
-    queryKey: ['weekly-units'],
-    queryFn: weeklyApi.getAll,
-  });
+  const [rentalQuery, weeklyQuery, landQuery, houseQuery, parkingQuery] = queries;
+  
+  const rentalUnits = rentalQuery.data || [];
+  const weeklyUnits = weeklyQuery.data || [];
+  const landProperties = landQuery.data || [];
+  const houseProperties = houseQuery.data || [];
+  const parkingSpaces = parkingQuery.data || [];
 
-  const { data: landProperties = [] } = useQuery({
-    queryKey: ['land-properties'],
-    queryFn: landApi.getAll,
-  });
-
-  const { data: houseProperties = [] } = useQuery({
-    queryKey: ['house-properties'],
-    queryFn: houseApi.getAll,
-  });
-
-  const { data: parkingSpaces = [] } = useQuery({
-    queryKey: ['parking-spaces'],
-    queryFn: parkingApi.getAll,
-  });
+  const isLoading = queries.some((query) => query.isLoading);
 
   const totalProperties = 
     rentalUnits.length + 
@@ -48,6 +59,22 @@ export default function Dashboard() {
 
   const totalVacant = vacantRentals + vacantWeekly + availableLand + availableHouse + availableParking;
   const vacancyRate = totalProperties > 0 ? ((totalVacant / totalProperties) * 100).toFixed(1) : '0.0';
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-gray-200 rounded"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

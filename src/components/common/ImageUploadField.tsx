@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import imageCompression from 'browser-image-compression';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { uploadImage, deleteImage } from '@/lib/upload';
 
 interface ImageUploadFieldProps {
   name: string;
@@ -14,62 +14,82 @@ interface ImageUploadFieldProps {
 export function ImageUploadField({ name, value, onChange, required }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
 
-  // 画像アップロード処理（現状はダミー）
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  };
+
   const handleUpload = async (file: File) => {
     try {
       setUploading(true);
 
-      // 1. 画像圧縮
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true
-      };
-      
-      // 注意: mock環境などでWebWorkerが動かない場合は圧縮をスキップするなどのハンドリングが必要
-      // 今回は圧縮を試みる
-      let fileToUpload = file;
-      try {
-        fileToUpload = await imageCompression(file, options);
-      } catch (e) {
-        console.warn('Image compression failed, using original file', e);
+      // Determine size based on name
+      // images.main -> 1920, images.floorplan -> 1200
+      const isFloorplan = name.includes('floorplan');
+      const maxWidth = isFloorplan ? 1200 : 1920;
+
+      // 古い画像を削除
+      if (value) {
+        // deleteImage handles blob: check internally to ignore it
+        await deleteImage(value);
       }
 
-      // 2. アップロード (ダミー実装)
-      // 本番ではここでAzure Blob StorageなどにアップロードしてURLを取得
-      // const formData = new FormData();
-      // formData.append('file', fileToUpload);
-      // const res = await uploadApi.upload(formData);
+      const url = await uploadImage(file, 1, maxWidth);
       
-      // ダミーラグ
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // ダミーURL生成
-      const dummyUrl = URL.createObjectURL(fileToUpload);
-      
-      onChange(dummyUrl);
+      onChange(url);
       toast.success('画像をアップロードしました');
     } catch (error) {
       console.error(error);
       toast.error('画像のアップロードに失敗しました');
     } finally {
+      // Clear input value to allow re-selection of same file if needed/failed? 
+      // Actually standard file input behavior.
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (value) {
+      try {
+        setUploading(true);
+        await deleteImage(value);
+        onChange('');
+        toast.success('画像を削除しました');
+      } catch (error) {
+        console.error(error);
+        toast.error('画像の削除に失敗しました');
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
   if (value) {
     return (
-      <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-gray-100">
-        <img src={value} alt="Preview" className="w-full h-full object-contain" />
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2"
-          onClick={() => onChange('')}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted">
+        <img
+          src={value}
+          alt="Uploaded image"
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute top-2 right-2 flex gap-2">
+            <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleDelete}
+                disabled={uploading}
+            >
+                {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                    <X className="h-4 w-4" />
+                )}
+            </Button>
+        </div>
       </div>
     );
   }
@@ -78,128 +98,137 @@ export function ImageUploadField({ name, value, onChange, required }: ImageUploa
     <div className="relative">
       <input
         type="file"
-        id={name}
-        accept="image/jpeg,image/png,image/webp"
+        id={`upload-${name}`}
         className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleUpload(file);
-        }}
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
         disabled={uploading}
       />
       <label
-        htmlFor={name}
-        className={`
-          flex flex-col items-center justify-center w-full aspect-video
-          border-2 border-dashed rounded-lg cursor-pointer
-          transition-colors
-          ${uploading ? 'bg-gray-100 border-gray-300' : 'hover:bg-gray-50 border-gray-300 hover:border-[#5AB9CE]'}
-        `}
+        htmlFor={`upload-${name}`}
+        className={`flex aspect-video w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 transition-colors hover:bg-muted ${
+          uploading ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
       >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-          {uploading ? (
-            <div className="animate-pulse flex flex-col items-center">
-              <ImageIcon className="w-10 h-10 mb-3 text-gray-400" />
-              <p className="text-sm text-gray-500">アップロード中...</p>
+        {uploading ? (
+          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-center text-muted-foreground">
+            <div className="rounded-full bg-background p-3 shadow-sm">
+              <Upload className="h-6 w-6" />
             </div>
-          ) : (
-            <>
-              <Upload className="w-10 h-10 mb-3 text-gray-400" />
-              <p className="mb-2 text-sm text-gray-500">
-                <span className="font-semibold">クリックしてアップロード</span>
-              </p>
-              <p className="text-xs text-gray-500">
-                PNG, JPG, WebP (最大 10MB)
-              </p>
-              {required && <span className="text-red-500 text-xs mt-1">* 必須</span>}
-            </>
-          )}
-        </div>
+            <div className="text-sm">
+              <span className="font-semibold text-primary">クリックしてアップロード</span>
+            </div>
+            <p className="text-xs">JPEG, PNG, WebP (最大10MB)</p>
+          </div>
+        )}
       </label>
+      {required && !value && (
+         <p className="mt-2 text-xs text-destructive">画像は必須です</p>
+      )}
     </div>
   );
 }
 
 interface MultiImageUploadFieldProps {
+  name: string;
   value?: string[];
   onChange: (urls: string[]) => void;
   maxFiles?: number;
 }
 
-export function MultiImageUploadField({ value = [], onChange, maxFiles = 10 }: MultiImageUploadFieldProps) {
-  const [uploading, setUploading] = useState(false);
+export function MultiImageUploadField({ name, value = [], onChange, maxFiles = 10 }: MultiImageUploadFieldProps) {
+    const [uploading, setUploading] = useState(false);
 
-  const handleUpload = async (files: FileList) => {
-    if (value.length + files.length > maxFiles) {
-      toast.error(`画像は最大${maxFiles}枚までです`);
-      return;
-    }
-
-    setUploading(true);
-    const newUrls: string[] = [];
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        // 圧縮等の処理は単体と同じ（省略）
-        const dummyUrl = URL.createObjectURL(file); // 本来はアップロード後のURL
-        newUrls.push(dummyUrl);
-      }
-      
-      onChange([...value, ...newUrls]);
-    } catch (error) {
-      toast.error('アップロードに失敗しました');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newValues = [...value];
-    newValues.splice(index, 1);
-    onChange(newValues);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {value.map((url, index) => (
-          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border bg-gray-100">
-            <img src={url} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-1 right-1 h-6 w-6"
-              onClick={() => removeImage(index)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ))}
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
         
-        {value.length < maxFiles && (
-          <label className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 border-gray-300 hover:border-[#5AB9CE]">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files && handleUpload(e.target.files)}
-              disabled={uploading}
-            />
-            <PlusIcon />
-          </label>
-        )}
-      </div>
-    </div>
-  );
-}
+        if (value.length + files.length > maxFiles) {
+            toast.error(`画像は最大${maxFiles}枚までです`);
+            return;
+        }
 
-function PlusIcon() {
-  return (
-    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-    </svg>
-  );
+        try {
+            setUploading(true);
+            // Default max size for gallery, maybe 1920?
+            const uploadPromises = files.map(file => uploadImage(file, 1, 1920));
+            const newUrls = await Promise.all(uploadPromises);
+            onChange([...value, ...newUrls]);
+            toast.success(`${newUrls.length}枚の画像をアップロードしました`);
+        } catch (error) {
+            console.error(error);
+            toast.error('画像のアップロードに失敗しました');
+        } finally {
+            setUploading(false);
+            // Reset input
+            e.target.value = '';
+        }
+    };
+
+    const handleRemove = async (index: number) => {
+        const urlToRemove = value[index];
+        
+        try {
+           setUploading(true);
+           await deleteImage(urlToRemove);
+           
+           const newUrls = [...value];
+           newUrls.splice(index, 1);
+           onChange(newUrls);
+           toast.success('画像を削除しました');
+        } catch(e) {
+            console.error(e);
+            toast.error('画像の削除に失敗しました');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {value.map((url, index) => (
+                    <div key={index} className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
+                        <img src={url} alt={`Gallery ${index}`} className="h-full w-full object-cover" />
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6"
+                            onClick={() => handleRemove(index)}
+                            disabled={uploading}
+                        >
+                            <X className="h-3 w-3" />
+                        </Button>
+                    </div>
+                ))}
+                
+                {value.length < maxFiles && (
+                    <div className="relative aspect-video w-full">
+                        <input
+                            type="file"
+                            multiple
+                            id={`upload-${name}`}
+                            className="hidden"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleFileChange}
+                            disabled={uploading}
+                        />
+                        <label
+                           htmlFor={`upload-${name}`}
+                           className={`flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 transition-colors hover:bg-muted ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {uploading ? (
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            ) : (
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                            )}
+                        </label>
+                    </div>
+                )}
+             </div>
+        </div>
+    );
 }

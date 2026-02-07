@@ -63,7 +63,22 @@ export default function LandList() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">読み込み中...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-32 bg-gray-200 rounded"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          </div>
+          <div className="h-10 w-24 bg-gray-200 rounded"></div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -113,68 +128,84 @@ export default function LandList() {
 
         <TabsContent value="list">
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>画像</TableHead>
-                  <TableHead>住所</TableHead>
-                  <TableHead>価格</TableHead>
-                  <TableHead>土地面積</TableHead>
-                  <TableHead>用途地域</TableHead>
-                  <TableHead>ステータス</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProperties.map((property) => (
-                  <TableRow key={property.land_id}>
-                    <TableCell>
-                      <img
-                        src={property.images?.main || 'https://via.placeholder.com/100'}
-                        alt={property.address}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{property.address}</TableCell>
-                    <TableCell>¥{(property.sale_price / 10000).toLocaleString()}万円</TableCell>
-                    <TableCell>{property.land_area}㎡ ({Math.round(property.land_area * 0.3025 * 100) / 100}坪)</TableCell>
-                    <TableCell>{property.zoning}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(property.status)}>
-                        {property.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/land/${property.land_id}/edit`)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(property.land_id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">画像</TableHead>
+                    <TableHead className="min-w-[150px]">住所</TableHead>
+                    <TableHead className="w-[100px]">価格</TableHead>
+                    <TableHead className="w-[120px]">土地面積</TableHead>
+                    <TableHead className="w-[120px]">用途地域</TableHead>
+                    <TableHead className="w-[100px]">ステータス</TableHead>
+                    <TableHead className="text-right w-[100px]">操作</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredProperties.map((property) => (
+                    <TableRow 
+                      key={property.land_id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/land/${property.land_id}`)}
+                    >
+                      <TableCell>
+                        <img
+                          src={property.images?.main || 'https://placehold.co/100'}
+                          alt={property.address}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{property.address}</TableCell>
+                      <TableCell className="whitespace-nowrap">¥{(property.sale_price / 10000).toLocaleString()}万円</TableCell>
+                      <TableCell className="whitespace-nowrap">{property.land_area}㎡ ({Math.round(property.land_area * 0.3025 * 100) / 100}坪)</TableCell>
+                      <TableCell className="whitespace-nowrap">{property.zoning}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(property.status)} className="whitespace-nowrap">
+                          {property.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/land/${property.land_id}/edit`);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(property.land_id);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </TabsContent>
 
         <TabsContent value="card">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProperties.map((property) => (
-              <Card key={property.land_id}>
+              <Card 
+                key={property.land_id} 
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/land/${property.land_id}`)}
+              >
                 <img
-                  src={property.images?.main || 'https://via.placeholder.com/400x300'}
+                  src={property.images?.main || 'https://placehold.co/400x300'}
                   alt={property.address}
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
@@ -204,14 +235,20 @@ export default function LandList() {
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => navigate(`/land/${property.land_id}/edit`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/land/${property.land_id}/edit`);
+                    }}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     編集
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={() => handleDelete(property.land_id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(property.land_id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

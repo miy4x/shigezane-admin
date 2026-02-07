@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
-// 画像バリデーション
-const imageSchema = z.object({
-  main: z.string().url('サムネイルは必須です'),
-  floorplan: z.string().url('間取り図は必須です').optional(),
-  survey: z.string().url('測量図は必須です').optional(),
-  layout: z.string().url('区画図は必須です').optional(),
-  gallery: z.array(z.string().url()).max(10, '画像は最大10枚までです').optional()
-});
+// 共通の画像バリデーションロジック
+const mainImageValidation = z.string()
+  .min(1, 'メイン画像は必須です')
+  .refine(
+    (url) => !url.startsWith('blob:'),
+    '画像のアップロードが完了していません'
+  );
+
+const galleryValidation = z.array(z.string()).max(10, '画像は最大10枚までです').optional();
 
 // 建物スキーマ
 export const buildingSchema = z.object({
@@ -39,8 +40,10 @@ export const rentalSchema = z.object({
   status: z.enum(['準備中', '募集中', '入居中'], {
     message: 'ステータスを選択してください'
   }),
-  images: imageSchema.extend({
-    floorplan: z.string().url('間取り図は必須です')
+  images: z.object({
+    main: mainImageValidation,
+    floorplan: z.string().optional(),
+    gallery: galleryValidation
   }),
   unit_features: z.array(z.string()).optional()
 });
@@ -64,8 +67,10 @@ export const weeklySchema = z.object({
   status: z.enum(['準備中', '募集中', '入居中'], {
     message: 'ステータスを選択してください'
   }),
-  images: imageSchema.extend({
-    floorplan: z.string().url('間取り図は必須です')
+  images: z.object({
+    main: mainImageValidation,
+    floorplan: z.string().optional(),
+    gallery: galleryValidation
   }),
   unit_features: z.array(z.string()).optional()
 });
@@ -83,8 +88,10 @@ export const landSchema = z.object({
   status: z.enum(['準備中', '募集中', '成約済'], {
     message: 'ステータスを選択してください'
   }),
-  images: imageSchema.extend({
-    survey: z.string().url('測量図は必須です')
+  images: z.object({
+    main: mainImageValidation,
+    survey: z.string().optional(),
+    gallery: galleryValidation
   }),
   land_details: z.record(z.string(), z.any()).optional()
 });
@@ -105,8 +112,10 @@ export const houseSchema = z.object({
   status: z.enum(['準備中', '募集中', '成約済'], {
     message: 'ステータスを選択してください'
   }),
-  images: imageSchema.extend({
-    floorplan: z.string().url('間取り図は必須です')
+  images: z.object({
+    main: mainImageValidation,
+    floorplan: z.string().optional(),
+    gallery: galleryValidation
   }),
   house_details: z.record(z.string(), z.any()).optional()
 });
@@ -116,8 +125,10 @@ export const parkingLotSchema = z.object({
   name: z.string().min(1, '駐車場名を入力してください'),
   address: z.string().min(1, '住所を入力してください'),
   total_spaces: z.number().min(1, '総区画数は1以上で入力してください').max(1000),
-  images: imageSchema.extend({
-    layout: z.string().url('区画図は必須です')
+  images: z.object({
+    main: mainImageValidation,
+    layout: z.string().optional(),
+    gallery: galleryValidation
   }),
   lot_features: z.record(z.string(), z.any()).optional()
 });

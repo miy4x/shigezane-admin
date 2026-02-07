@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { ImageUploadField, MultiImageUploadField } from '@/components/common/ImageUploadField';
 import { BuildingSelector } from '@/components/property/BuildingSelector';
 import type { WeeklyUnitInput } from '@/types/property';
+import { Camera, FileDigit, Images } from 'lucide-react';
 
 type WeeklyFormData = z.infer<typeof weeklySchema>;
 
@@ -94,6 +95,11 @@ export default function WeeklyForm() {
   });
 
   const onSubmit = (data: WeeklyFormData) => {
+    if (data.images?.main?.startsWith('blob:')) {
+      toast.error('画像のアップロードが完了していません');
+      return;
+    }
+
     if (isEdit) {
       updateMutation.mutate(data);
     } else {
@@ -134,12 +140,12 @@ export default function WeeklyForm() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="unit_number">部屋番号</Label>
-                <Input id="unit_number" {...register('unit_number')} />
+                <Input id="unit_number" autoComplete="off" {...register('unit_number')} />
                 {errors.unit_number && <p className="text-sm text-red-500">{errors.unit_number.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="floor">階数</Label>
-                <Input id="floor" type="number" {...register('floor', { valueAsNumber: true })} />
+                <Input id="floor" type="number" autoComplete="off" {...register('floor', { valueAsNumber: true })} />
                 {errors.floor && <p className="text-sm text-red-500">{errors.floor.message}</p>}
               </div>
               <div className="space-y-2">
@@ -158,7 +164,7 @@ export default function WeeklyForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="area">面積（㎡）</Label>
-                <Input id="area" type="number" step="0.1" {...register('area', { valueAsNumber: true })} />
+                <Input id="area" type="number" step="0.1" autoComplete="off" {...register('area', { valueAsNumber: true })} />
                 {errors.area && <p className="text-sm text-red-500">{errors.area.message}</p>}
               </div>
               <div className="space-y-2">
@@ -186,23 +192,23 @@ export default function WeeklyForm() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="daily_rate">日額（円）</Label>
-                <Input id="daily_rate" type="number" {...register('daily_rate', { valueAsNumber: true })} />
+                <Input id="daily_rate" type="number" autoComplete="off" {...register('daily_rate', { valueAsNumber: true })} />
                 {errors.daily_rate && <p className="text-sm text-red-500">{errors.daily_rate.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="weekly_rate">週額（円）</Label>
-                <Input id="weekly_rate" type="number" {...register('weekly_rate', { valueAsNumber: true })} />
+                <Input id="weekly_rate" type="number" autoComplete="off" {...register('weekly_rate', { valueAsNumber: true })} />
                 {errors.weekly_rate && <p className="text-sm text-red-500">{errors.weekly_rate.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="monthly_rate">月額（円）</Label>
-                <Input id="monthly_rate" type="number" {...register('monthly_rate', { valueAsNumber: true })} />
+                <Input id="monthly_rate" type="number" autoComplete="off" {...register('monthly_rate', { valueAsNumber: true })} />
                 {errors.monthly_rate && <p className="text-sm text-red-500">{errors.monthly_rate.message}</p>}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="management_fee">管理費（円）</Label>
-                <Input id="management_fee" type="number" {...register('management_fee', { valueAsNumber: true })} />
+                <Input id="management_fee" type="number" autoComplete="off" {...register('management_fee', { valueAsNumber: true })} />
               </div>
               
               <div className="col-span-3 grid grid-cols-2 gap-4">
@@ -217,7 +223,7 @@ export default function WeeklyForm() {
                 {parkingAvailable && (
                   <div className="space-y-2">
                     <Label htmlFor="parking_fee">駐車場代（円）</Label>
-                    <Input id="parking_fee" type="number" {...register('parking_fee', { valueAsNumber: true })} />
+                    <Input id="parking_fee" type="number" autoComplete="off" {...register('parking_fee', { valueAsNumber: true })} />
                   </div>
                 )}
               </div>
@@ -227,40 +233,52 @@ export default function WeeklyForm() {
 
         {/* 画像アップロード */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>📷 サムネイル（必須）</CardTitle>
-              <CardDescription>物件一覧で表示される代表画像</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.main"
-                value={watch('images.main')}
-                onChange={(url) => setValue('images.main', url)}
-                required
-              />
-              {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  サムネイル（必須）
+                </CardTitle>
+                <CardDescription>物件一覧で表示される代表画像</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.main"
+                  value={watch('images.main')}
+                  onChange={(url) => setValue('images.main', url)}
+                  required
+                />
+                {errors.images?.main && <p className="text-sm text-red-500">{errors.images.main.message}</p>}
+              </CardContent>
+            </Card>
+            
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileDigit className="h-5 w-5" />
+                  間取り図（必須）
+                </CardTitle>
+                <CardDescription>部屋の配置を示す図面</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploadField
+                  name="images.floorplan"
+                  value={watch('images.floorplan')}
+                  onChange={(url) => setValue('images.floorplan', url)}
+                  required
+                />
+                {errors.images?.floorplan && <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>}
+              </CardContent>
+            </Card>
+          </div>
           
           <Card>
             <CardHeader>
-              <CardTitle>📐 間取り図（必須）</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploadField
-                name="images.floorplan"
-                value={watch('images.floorplan')}
-                onChange={(url) => setValue('images.floorplan', url)}
-                required
-              />
-              {errors.images?.floorplan && <p className="text-sm text-red-500">{errors.images.floorplan.message}</p>}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>🖼️ その他の画像（最大10枚）</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Images className="h-5 w-5" />
+                その他の画像（最大10枚）
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <MultiImageUploadField

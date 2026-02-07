@@ -41,6 +41,7 @@ export interface RentalUnit {
   status: '準備中' | '募集中' | '入居中';
   images: PropertyImages;
   unit_features?: string[];
+  remarks?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -67,6 +68,7 @@ export interface WeeklyUnit {
   status: '準備中' | '募集中' | '入居中';
   images: PropertyImages;
   unit_features?: string[];
+  remarks?: string;
   created_at?: string;
   updated_at?: string;
 }

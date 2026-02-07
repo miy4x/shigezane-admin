@@ -24,14 +24,15 @@ export default function MainLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
+      <header className="bg-white border-b sticky top-0 z-50 h-[57px]">
+        <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
+              className="md:hidden"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu className="h-5 w-5" />
@@ -41,7 +42,7 @@ export default function MainLayout() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.name}</span>
+            <span className="text-sm text-gray-600 hidden md:inline">{user?.name}</span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               ログアウト
@@ -50,28 +51,54 @@ export default function MainLayout() {
         </div>
       </header>
 
-      <div className="flex">
-        {/* サイドバー */}
+      <div className="flex flex-1 relative">
+        {/* サイドバー (デスクトップ) */}
+        <aside className="hidden md:block w-64 bg-white border-r h-[calc(100vh-57px)] sticky top-[57px] overflow-y-auto">
+          <nav className="p-4 space-y-2">
+            {menuItems.map((item) => (
+              <Link key={item.path} to={item.path}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+
+        {/* サイドバー (モバイル - オーバーレイ) */}
         {sidebarOpen && (
-          <aside className="w-64 bg-white border-r min-h-[calc(100vh-57px)] sticky top-[57px]">
-            <nav className="p-4 space-y-2">
-              {menuItems.map((item) => (
-                <Link key={item.path} to={item.path}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                  >
-                    <item.icon className="h-4 w-4 mr-2" />
-                    {item.label}
-                  </Button>
-                </Link>
-              ))}
-            </nav>
-          </aside>
+          <div className="fixed inset-0 z-50 md:hidden">
+             <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+             <aside className="absolute top-0 left-0 w-64 h-full bg-white shadow-lg animate-in slide-in-from-left">
+                <div className="p-4 border-b flex justify-between items-center h-[57px]">
+                   <span className="font-bold">メニュー</span>
+                   <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                     <Menu className="h-5 w-5" /> 
+                   </Button>
+                </div>
+                <nav className="p-4 space-y-2">
+                  {menuItems.map((item) => (
+                    <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                      >
+                        <item.icon className="h-4 w-4 mr-2" />
+                        {item.label}
+                      </Button>
+                    </Link>
+                  ))}
+                </nav>
+             </aside>
+          </div>
         )}
 
         {/* メインコンテンツ */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 md:p-6 w-full max-w-[100vw] overflow-x-hidden">
           <Outlet />
         </main>
       </div>

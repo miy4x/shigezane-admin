@@ -65,7 +65,22 @@ export default function RentalList() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">読み込み中...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-32 bg-gray-200 rounded"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          </div>
+          <div className="h-10 w-24 bg-gray-200 rounded"></div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -118,61 +133,73 @@ export default function RentalList() {
         {/* リスト表示 */}
         <TabsContent value="list">
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>画像</TableHead>
-                  <TableHead>建物名</TableHead>
-                  <TableHead>部屋</TableHead>
-                  <TableHead>間取り</TableHead>
-                  <TableHead>家賃</TableHead>
-                  <TableHead>ステータス</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProperties.map((property) => (
-                  <TableRow key={property.unit_id}>
-                    <TableCell>
-                      <img
-                        src={property.images?.main || 'https://via.placeholder.com/100'}
-                        alt={property.building_name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{property.building_name}</TableCell>
-                    <TableCell>{property.unit_number}</TableCell>
-                    <TableCell>{property.room_layout}</TableCell>
-                    <TableCell className="font-semibold">
-                      ¥{property.monthly_rent.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(property.status)}>
-                        {property.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/rental/${property.unit_id}/edit`)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(property.unit_id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">画像</TableHead>
+                    <TableHead className="min-w-[150px]">建物名</TableHead>
+                    <TableHead className="w-[100px]">部屋</TableHead>
+                    <TableHead className="w-[100px]">間取り</TableHead>
+                    <TableHead className="w-[120px]">家賃</TableHead>
+                    <TableHead className="w-[100px]">ステータス</TableHead>
+                    <TableHead className="text-right w-[100px]">操作</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredProperties.map((property) => (
+                    <TableRow 
+                      key={property.unit_id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/rental/${property.unit_id}`)}
+                    >
+                      <TableCell>
+                        <img
+                          src={property.images?.main || 'https://placehold.co/100'}
+                          alt={property.building_name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{property.building_name}</TableCell>
+                      <TableCell className="whitespace-nowrap">{property.unit_number}</TableCell>
+                      <TableCell className="whitespace-nowrap">{property.room_layout}</TableCell>
+                      <TableCell className="font-semibold whitespace-nowrap">
+                        ¥{property.monthly_rent.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(property.status)} className="whitespace-nowrap">
+                          {property.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/rental/${property.unit_id}/edit`);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(property.unit_id);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </TabsContent>
 
@@ -180,9 +207,13 @@ export default function RentalList() {
         <TabsContent value="card">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProperties.map((property) => (
-              <Card key={property.unit_id}>
+              <Card 
+                key={property.unit_id}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/rental/${property.unit_id}`)}
+              >
                 <img
-                  src={property.images?.main || 'https://via.placeholder.com/400x300'}
+                  src={property.images?.main || 'https://placehold.co/400x300'}
                   alt={property.building_name}
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
@@ -208,14 +239,20 @@ export default function RentalList() {
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => navigate(`/rental/${property.unit_id}/edit`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/rental/${property.unit_id}/edit`);
+                    }}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     編集
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={() => handleDelete(property.unit_id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(property.unit_id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

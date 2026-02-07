@@ -28,9 +28,11 @@ export function BuildingSelector({ value, onChange, error }: BuildingSelectorPro
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: buildings = [] } = useQuery({
+  const { data: buildings = [], isError } = useQuery({
     queryKey: ['buildings'],
     queryFn: buildingApi.getAll,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   // 新規作成用のフォーム
@@ -148,6 +150,7 @@ export function BuildingSelector({ value, onChange, error }: BuildingSelectorPro
                       <Input 
                         id="building_age" 
                         type="number" 
+                        autoComplete="off"
                         {...register('building_age', { valueAsNumber: true })} 
                       />
                     </div>
@@ -156,6 +159,7 @@ export function BuildingSelector({ value, onChange, error }: BuildingSelectorPro
                       <Input 
                         id="total_floors" 
                         type="number" 
+                        autoComplete="off"
                         {...register('total_floors', { valueAsNumber: true })} 
                       />
                     </div>
