@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { convertToCSV, downloadCSV, getTimestamp } from '@/lib/csv-export';
 
 export default function WeeklyList() {
   const navigate = useNavigate();
@@ -37,6 +38,28 @@ export default function WeeklyList() {
     if (window.confirm('本当に削除しますか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'unit_id', label: 'ユニットID' },
+      { key: 'building_name', label: '建物名' },
+      { key: 'unit_number', label: '部屋番号' },
+      { key: 'floor', label: '階数' },
+      { key: 'room_layout', label: '間取り' },
+      { key: 'area', label: '面積(㎡)' },
+      { key: 'weekly_rent', label: '週賃料(円)' },
+      { key: 'utilities_included', label: '光熱費込み' },
+      { key: 'internet_included', label: 'インターネット込み' },
+      { key: 'furnished', label: '家具付き' },
+      { key: 'status', label: 'ステータス' },
+      { key: 'building_address', label: '住所' },
+      { key: 'remarks', label: '備考' }
+    ];
+
+    const csv = convertToCSV(filteredProperties, columns);
+    downloadCSV(csv, `週貸し一覧_${getTimestamp()}.csv`);
+    toast.success('CSVファイルをダウンロードしました');
   };
 
   // フィルタリング
@@ -90,10 +113,16 @@ export default function WeeklyList() {
           <h2 className="text-3xl font-bold tracking-tight">ウィークリー物件</h2>
           <p className="text-gray-500 mt-2">全{properties.length}件</p>
         </div>
-        <Button onClick={() => navigate('/weekly/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            CSV出力
+          </Button>
+          <Button onClick={() => navigate('/weekly/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4">

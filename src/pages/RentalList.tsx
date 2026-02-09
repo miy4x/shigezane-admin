@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { RentalSearchForm, type RentalSearchFilters } from '@/components/property/RentalSearchForm';
+import { convertToCSV, downloadCSV, getTimestamp } from '@/lib/csv-export';
 
 export default function RentalList() {
   const navigate = useNavigate();
@@ -44,6 +45,29 @@ export default function RentalList() {
     if (window.confirm('本当に削除しますか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'unit_id' as const, label: '物件ID' },
+      { key: 'building_name' as const, label: '建物名' },
+      { key: 'unit_number' as const, label: '部屋番号' },
+      { key: 'floor' as const, label: '階数' },
+      { key: 'room_layout' as const, label: '間取り' },
+      { key: 'area' as const, label: '面積(㎡)' },
+      { key: 'monthly_rent' as const, label: '家賃' },
+      { key: 'management_fee' as const, label: '管理費' },
+      { key: 'deposit' as const, label: '敷金' },
+      { key: 'key_money' as const, label: '礼金' },
+      { key: 'status' as const, label: 'ステータス' },
+      { key: 'building_address' as const, label: '住所' },
+      { key: 'remarks' as const, label: '備考' },
+    ];
+
+    const csvContent = convertToCSV(filteredProperties, columns);
+    const filename = `賃貸物件一覧_${getTimestamp()}.csv`;
+    downloadCSV(csvContent, filename);
+    toast.success('CSVファイルをダウンロードしました');
   };
 
   // フィルタリングとソート
@@ -79,18 +103,6 @@ export default function RentalList() {
 
     if (searchFilters.buildingId) {
       result = result.filter((p) => p.building_id === searchFilters.buildingId);
-    }
-
-    if (searchFilters.petsAllowed) {
-      result = result.filter((p) => p.pets_allowed === true);
-    }
-
-    if (searchFilters.instrumentsAllowed) {
-      result = result.filter((p) => p.musical_instruments_allowed === true);
-    }
-
-    if (searchFilters.parkingAvailable) {
-      result = result.filter((p) => p.parking_available === true);
     }
 
     // 既存のステータスフィルター
@@ -149,10 +161,16 @@ export default function RentalList() {
             全{properties.length}件 / 表示{filteredProperties.length}件
           </p>
         </div>
-        <Button onClick={() => navigate('/rental/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            CSV出力
+          </Button>
+          <Button onClick={() => navigate('/rental/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       {/* 検索フォーム */}

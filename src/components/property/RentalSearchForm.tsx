@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 
 export interface RentalSearchFilters {
   keyword?: string;
@@ -13,9 +12,6 @@ export interface RentalSearchFilters {
   maxRent?: number;
   roomLayout?: string;
   buildingId?: number;
-  petsAllowed?: boolean;
-  instrumentsAllowed?: boolean;
-  parkingAvailable?: boolean;
 }
 
 interface RentalSearchFormProps {
@@ -143,39 +139,6 @@ export function RentalSearchForm({ onFilterChange, buildings = [] }: RentalSearc
               value={filters.roomLayout || ''}
               onChange={(e) => handleFilterChange('roomLayout', e.target.value)}
             />
-          </div>
-
-          <div className="flex items-center space-x-2 pt-6">
-            <Checkbox
-              id="petsAllowed"
-              checked={filters.petsAllowed || false}
-              onCheckedChange={(checked) => handleFilterChange('petsAllowed', checked || undefined)}
-            />
-            <label htmlFor="petsAllowed" className="text-sm cursor-pointer">
-              ペット可のみ
-            </label>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-6">
-            <Checkbox
-              id="instrumentsAllowed"
-              checked={filters.instrumentsAllowed || false}
-              onCheckedChange={(checked) => handleFilterChange('instrumentsAllowed', checked || undefined)}
-            />
-            <label htmlFor="instrumentsAllowed" className="text-sm cursor-pointer">
-              楽器可のみ
-            </label>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-6">
-            <Checkbox
-              id="parkingAvailable"
-              checked={filters.parkingAvailable || false}
-              onCheckedChange={(checked) => handleFilterChange('parkingAvailable', checked || undefined)}
-            />
-            <label htmlFor="parkingAvailable" className="text-sm cursor-pointer">
-              駐車場ありのみ
-            </label>
           </div>
         </div>
       )}

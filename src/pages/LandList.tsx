@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { LandSearchForm, type LandSearchFilters } from '@/components/property/LandSearchForm';
+import { convertToCSV, downloadCSV, getTimestamp } from '@/lib/csv-export';
 
 export default function LandList() {
   const navigate = useNavigate();
@@ -39,6 +40,26 @@ export default function LandList() {
     if (window.confirm('本当に削除しますか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'property_id', label: '物件ID' },
+      { key: 'title', label: 'タイトル' },
+      { key: 'zoning', label: '用途地域' },
+      { key: 'area', label: '面積(㎡)' },
+      { key: 'price', label: '価格(万円)' },
+      { key: 'status', label: 'ステータス' },
+      { key: 'address', label: '住所' },
+      { key: 'access', label: 'アクセス' },
+      { key: 'building_coverage_ratio', label: '建ぺい率(%)' },
+      { key: 'floor_area_ratio', label: '容積率(%)' },
+      { key: 'remarks', label: '備考' }
+    ];
+
+    const csv = convertToCSV(filteredProperties, columns);
+    downloadCSV(csv, `土地一覧_${getTimestamp()}.csv`);
+    toast.success('CSVファイルをダウンロードしました');
   };
 
   // フィルタリングとソート
@@ -129,10 +150,16 @@ export default function LandList() {
             全{properties.length}件 / 表示{filteredProperties.length}件
           </p>
         </div>
-        <Button onClick={() => navigate('/land/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            CSV出力
+          </Button>
+          <Button onClick={() => navigate('/land/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       {/* 検索フォーム */}

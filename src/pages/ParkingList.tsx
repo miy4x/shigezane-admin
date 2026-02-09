@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Car } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { convertToCSV, downloadCSV, getTimestamp } from '@/lib/csv-export';
 
 export default function ParkingList() {
   const navigate = useNavigate();
@@ -37,6 +38,24 @@ export default function ParkingList() {
     if (window.confirm('本当に削除しますか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'space_id', label: '区画ID' },
+      { key: 'parking_lot_name', label: '駐車場名' },
+      { key: 'space_number', label: '区画番号' },
+      { key: 'monthly_fee', label: '月額料金(円)' },
+      { key: 'vehicle_type', label: '車種制限' },
+      { key: 'roof_available', label: '屋根の有無' },
+      { key: 'status', label: 'ステータス' },
+      { key: 'parking_lot_address', label: '住所' },
+      { key: 'remarks', label: '備考' }
+    ];
+
+    const csv = convertToCSV(filteredSpaces, columns);
+    downloadCSV(csv, `駐車場一覧_${getTimestamp()}.csv`);
+    toast.success('CSVファイルをダウンロードしました');
   };
 
   // フィルタリング
@@ -85,10 +104,16 @@ export default function ParkingList() {
           <h2 className="text-3xl font-bold tracking-tight">駐車場管理</h2>
           <p className="text-gray-500 mt-2">全{spaces.length}区画</p>
         </div>
-        <Button onClick={() => navigate('/parking/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            CSV出力
+          </Button>
+          <Button onClick={() => navigate('/parking/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4">

@@ -46,10 +46,6 @@ export default function RentalForm() {
       management_fee: 0,
       deposit: 0,
       key_money: 0,
-      parking_available: false,
-      parking_fee: 0,
-      pets_allowed: false,
-      musical_instruments_allowed: false,
       status: '準備中',
       images: {
         main: '',
@@ -59,8 +55,6 @@ export default function RentalForm() {
       unit_features: [],
     },
   });
-
-  const parkingAvailable = watch('parking_available');
 
   // 編集時のデータ取得
   const { data: property } = useQuery({
@@ -286,28 +280,6 @@ export default function RentalForm() {
                   <p className="text-sm text-red-500">{errors.key_money.message}</p>
                 )}
               </div>
-
-              <div className="space-y-2 col-span-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="parking_available"
-                    onCheckedChange={(checked) => setValue('parking_available', !!checked)}
-                  />
-                  <Label htmlFor="parking_available">駐車場あり</Label>
-                </div>
-              </div>
-
-              {parkingAvailable && (
-                <div className="space-y-2">
-                  <Label htmlFor="parking_fee">駐車場代（円）</Label>
-                  <Input
-                    id="parking_fee"
-                    type="number"
-                    autoComplete="off"
-                    {...register('parking_fee', { valueAsNumber: true })}
-                  />
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -381,33 +353,6 @@ export default function RentalForm() {
             </CardContent>
           </Card>
         </div>
-
-        {/* 設備・条件 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>設備・条件</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="pets_allowed"
-                  onCheckedChange={(checked) => setValue('pets_allowed', !!checked)}
-                />
-                <Label htmlFor="pets_allowed">ペット可</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="musical_instruments_allowed"
-                  onCheckedChange={(checked) =>
-                    setValue('musical_instruments_allowed', !!checked)
-                  }
-                />
-                <Label htmlFor="musical_instruments_allowed">楽器可</Label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* ステータス */}
         <Card>

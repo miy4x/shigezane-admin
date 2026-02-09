@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { convertToCSV, downloadCSV, getTimestamp } from '@/lib/csv-export';
 
 export default function HouseList() {
   const navigate = useNavigate();
@@ -38,6 +39,28 @@ export default function HouseList() {
     if (window.confirm('本当に削除しますか？')) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleExportCSV = () => {
+    const columns = [
+      { key: 'property_id', label: '物件ID' },
+      { key: 'property_type', label: '物件タイプ' },
+      { key: 'title', label: 'タイトル' },
+      { key: 'building_structure', label: '建物構造' },
+      { key: 'land_area', label: '土地面積(㎡)' },
+      { key: 'building_area', label: '建物面積(㎡)' },
+      { key: 'room_layout', label: '間取り' },
+      { key: 'price', label: '価格(万円)' },
+      { key: 'construction_year', label: '築年月' },
+      { key: 'status', label: 'ステータス' },
+      { key: 'address', label: '住所' },
+      { key: 'access', label: 'アクセス' },
+      { key: 'remarks', label: '備考' }
+    ];
+
+    const csv = convertToCSV(filteredProperties, columns);
+    downloadCSV(csv, `売買物件一覧_${getTimestamp()}.csv`);
+    toast.success('CSVファイルをダウンロードしました');
   };
 
   // フィルタリング
@@ -92,10 +115,16 @@ export default function HouseList() {
           <h2 className="text-3xl font-bold tracking-tight">住宅・マンション管理</h2>
           <p className="text-gray-500 mt-2">全{properties.length}件</p>
         </div>
-        <Button onClick={() => navigate('/house/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            CSV出力
+          </Button>
+          <Button onClick={() => navigate('/house/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4">
