@@ -5,7 +5,7 @@ import { Building2, Home, LandPlot, ParkingCircle, CalendarClock, LayoutDashboar
 import { useState } from 'react';
 
 export default function MainLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -26,18 +26,18 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-white border-b sticky top-0 z-50 h-[57px]">
+      <header className="bg-white border-b sticky top-0 z-[60] h-[57px]">
         <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden fixed left-4 top-2 z-[70] bg-white"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-bold" style={{ color: '#5AB9CE' }}>
+            <h1 className="text-xl font-bold ml-12 md:ml-0" style={{ color: '#5AB9CE' }}>
               重実不動産 管理画面
             </h1>
           </div>
@@ -74,11 +74,8 @@ export default function MainLayout() {
           <div className="fixed inset-0 z-50 md:hidden">
              <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
              <aside className="absolute top-0 left-0 w-64 h-full bg-white shadow-lg animate-in slide-in-from-left">
-                <div className="p-4 border-b flex justify-between items-center h-[57px]">
+                <div className="p-4 border-b h-[57px] flex items-center">
                    <span className="font-bold">メニュー</span>
-                   <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-                     <Menu className="h-5 w-5" /> 
-                   </Button>
                 </div>
                 <nav className="p-4 space-y-2">
                   {menuItems.map((item) => (

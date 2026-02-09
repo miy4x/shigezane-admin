@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { landApi } from '@/lib/api';
@@ -11,11 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { LandSearchForm, type LandSearchFilters } from '@/components/property/LandSearchForm';
 
 export default function LandList() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [searchFilters, setSearchFilters] = useState<LandSearchFilters>({});
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['land-properties'],
@@ -39,22 +41,59 @@ export default function LandList() {
     }
   };
 
-  // フィルタリング
-  let filteredProperties = [...properties];
-  if (statusFilter !== 'all') {
-    filteredProperties = filteredProperties.filter((p) => {
-      return p.status === statusFilter;
-    });
-  }
+  // フィルタリングとソート
+  const filteredProperties = useMemo(() => {
+    let result = [...properties];
 
-  // ソート
-  filteredProperties.sort((a, b) => {
-    if (sortBy === 'price-asc') return a.sale_price - b.sale_price;
-    if (sortBy === 'price-desc') return b.sale_price - a.sale_price;
-    if (sortBy === 'area-desc') return b.land_area - a.land_area;
-    if (sortBy === 'newest') return (b.land_id || 0) - (a.land_id || 0);
-    return 0;
-  });
+    // 検索フィルター適用
+    if (searchFilters.keyword) {
+      const keyword = searchFilters.keyword.toLowerCase();
+      result = result.filter((p) =>
+        p.address?.toLowerCase().includes(keyword) ||
+        p.land_category?.toLowerCase().includes(keyword)
+      );
+    }
+
+    if (searchFilters.status) {
+      result = result.filter((p) => p.status === searchFilters.status);
+    }
+
+    if (searchFilters.minPrice) {
+      result = result.filter((p) => p.sale_price >= searchFilters.minPrice!);
+    }
+
+    if (searchFilters.maxPrice) {
+      result = result.filter((p) => p.sale_price <= searchFilters.maxPrice!);
+    }
+
+    if (searchFilters.minArea) {
+      result = result.filter((p) => p.land_area >= searchFilters.minArea!);
+    }
+
+    if (searchFilters.maxArea) {
+      result = result.filter((p) => p.land_area <= searchFilters.maxArea!);
+    }
+
+    if (searchFilters.zoning) {
+      result = result.filter((p) => p.zoning === searchFilters.zoning);
+    }
+
+    // 既存のステータスフィルター
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => p.status === statusFilter);
+    }
+
+    // ソート
+    result.sort((a, b) => {
+      if (sortBy === 'price-asc') return a.sale_price - b.sale_price;
+      if (sortBy === 'price-desc') return b.sale_price - a.sale_price;
+      if (sortBy === 'area-desc') return b.land_area - a.land_area;
+      if (sortBy === 'newest') return (b.land_id || 0) - (a.land_id || 0);
+      return 0;
+    });
+
+    return result;
+  }, [properties, searchFilters, statusFilter, sortBy]);
 
   const getStatusBadgeVariant = (status: string) => {
     if (status === '募集中') return 'default';
@@ -86,13 +125,18 @@ export default function LandList() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">土地管理</h2>
-          <p className="text-gray-500 mt-2">全{properties.length}件</p>
+          <p className="text-gray-500 mt-2">
+            全{properties.length}件 / 表示{filteredProperties.length}件
+          </p>
         </div>
         <Button onClick={() => navigate('/land/new')}>
           <Plus className="mr-2 h-4 w-4" />
           新規登録
         </Button>
       </div>
+
+      {/* 検索フォーム */}
+      <LandSearchForm onFilterChange={setSearchFilters} />
 
       <div className="flex gap-4">
         <Select value={statusFilter} onValueChange={setStatusFilter}>

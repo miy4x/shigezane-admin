@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { rentalApi } from '@/lib/api';
+import { rentalApi, buildingApi } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,15 +11,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { RentalSearchForm, type RentalSearchFilters } from '@/components/property/RentalSearchForm';
 
 export default function RentalList() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [searchFilters, setSearchFilters] = useState<RentalSearchFilters>({});
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['rental-units'],
     queryFn: rentalApi.getAll,
+  });
+
+  const { data: buildings = [] } = useQuery({
+    queryKey: ['buildings'],
+    queryFn: buildingApi.getAll,
   });
 
   const deleteMutation = useMutation({
@@ -39,24 +46,73 @@ export default function RentalList() {
     }
   };
 
-  // フィルタリング
-  let filteredProperties = [...properties];
-  if (statusFilter !== 'all') {
-    filteredProperties = filteredProperties.filter((p) => {
-      if (statusFilter === 'available') return p.status === '募集中';
-      if (statusFilter === 'occupied') return p.status === '入居中';
-      if (statusFilter === 'preparing') return p.status === '準備中';
-      return true;
-    });
-  }
+  // フィルタリングとソート
+  const filteredProperties = useMemo(() => {
+    let result = [...properties];
 
-  // ソート
-  filteredProperties.sort((a, b) => {
-    if (sortBy === 'rent-asc') return a.monthly_rent - b.monthly_rent;
-    if (sortBy === 'rent-desc') return b.monthly_rent - a.monthly_rent;
-    if (sortBy === 'newest') return (b.unit_id || 0) - (a.unit_id || 0);
-    return 0;
-  });
+    // 検索フィルター適用
+    if (searchFilters.keyword) {
+      const keyword = searchFilters.keyword.toLowerCase();
+      result = result.filter((p) =>
+        p.building_name?.toLowerCase().includes(keyword) ||
+        p.building_address?.toLowerCase().includes(keyword) ||
+        p.unit_number?.toLowerCase().includes(keyword) ||
+        p.remarks?.toLowerCase().includes(keyword)
+      );
+    }
+
+    if (searchFilters.status) {
+      result = result.filter((p) => p.status === searchFilters.status);
+    }
+
+    if (searchFilters.minRent) {
+      result = result.filter((p) => p.monthly_rent >= searchFilters.minRent!);
+    }
+
+    if (searchFilters.maxRent) {
+      result = result.filter((p) => p.monthly_rent <= searchFilters.maxRent!);
+    }
+
+    if (searchFilters.roomLayout) {
+      result = result.filter((p) => p.room_layout === searchFilters.roomLayout);
+    }
+
+    if (searchFilters.buildingId) {
+      result = result.filter((p) => p.building_id === searchFilters.buildingId);
+    }
+
+    if (searchFilters.petsAllowed) {
+      result = result.filter((p) => p.pets_allowed === true);
+    }
+
+    if (searchFilters.instrumentsAllowed) {
+      result = result.filter((p) => p.musical_instruments_allowed === true);
+    }
+
+    if (searchFilters.parkingAvailable) {
+      result = result.filter((p) => p.parking_available === true);
+    }
+
+    // 既存のステータスフィルター
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => {
+        if (statusFilter === 'available') return p.status === '募集中';
+        if (statusFilter === 'occupied') return p.status === '入居中';
+        if (statusFilter === 'preparing') return p.status === '準備中';
+        return true;
+      });
+    }
+
+    // ソート
+    result.sort((a, b) => {
+      if (sortBy === 'rent-asc') return a.monthly_rent - b.monthly_rent;
+      if (sortBy === 'rent-desc') return b.monthly_rent - a.monthly_rent;
+      if (sortBy === 'newest') return (b.unit_id || 0) - (a.unit_id || 0);
+      return 0;
+    });
+
+    return result;
+  }, [properties, searchFilters, statusFilter, sortBy]);
 
   const getStatusBadgeVariant = (status: string) => {
     if (status === '募集中') return 'default';
@@ -89,13 +145,18 @@ export default function RentalList() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">賃貸物件</h2>
-          <p className="text-gray-500 mt-2">全{properties.length}件</p>
+          <p className="text-gray-500 mt-2">
+            全{properties.length}件 / 表示{filteredProperties.length}件
+          </p>
         </div>
         <Button onClick={() => navigate('/rental/new')}>
           <Plus className="mr-2 h-4 w-4" />
           新規登録
         </Button>
       </div>
+
+      {/* 検索フォーム */}
+      <RentalSearchForm onFilterChange={setSearchFilters} buildings={buildings} />
 
       {/* フィルター・ソート */}
       <div className="flex gap-4">
